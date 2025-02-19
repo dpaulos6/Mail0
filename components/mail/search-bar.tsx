@@ -10,7 +10,7 @@ import { Search, SlidersHorizontal, CalendarIcon } from "lucide-react";
 import { useSearchValue } from "@/hooks/use-search-value";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
-import type { DateRange } from "react-day-picker";
+import { type DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 
 const inboxes = ["All Mail", "Inbox", "Drafts", "Sent", "Spam", "Trash", "Archive"];
 
-function DateFilter({ id }: { id: string }) {
+function DateFilter() {
   const [date, setDate] = useState<DateRange | undefined>({
     from: subDays(new Date(), 7),
     to: new Date(),
@@ -77,20 +77,19 @@ export function SearchBar() {
     },
   });
 
+  /* eslint-disable-next-line react-hooks/exhaustive-deps */
   useEffect(() => {
-    const subscription = form.watch(
-      (data: { subject: string; from: string; to: string; q: string }) => {
-        submitSearch(data as { subject: string; from: string; to: string; q: string });
-      },
-    );
+    const subscription = form.watch((data) => {
+      submitSearch(data as { subject: string; from: string; to: string; q: string });
+    });
     return () => subscription.unsubscribe();
   }, [form.watch]);
 
-  // TODO: please throttle this Nizzy, please
   const submitSearch = (data: { subject: string; from: string; to: string; q: string }) => {
     // add logic for other fields
     setSearchValue({
       value: data.q,
+      highlight: data.q,
     });
   };
 
@@ -98,20 +97,19 @@ export function SearchBar() {
     form.reset();
     setSearchValue({
       value: "",
+      highlight: "",
     });
   };
 
   return (
-    <div className="relative flex-1 px-4 md:max-w-[600px] md:px-8">
-      <form className="relative flex items-center">
-        <Form {...form}>
-          <Search
-            className="absolute left-2 h-3.5 w-3.5 text-muted-foreground/70"
-            aria-hidden="true"
-          />
+    <div className="relative flex-1 md:max-w-[600px]">
+      <Form {...form}>
+        <div className="relative flex items-center">
+          <Search className="absolute left-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <Input
             placeholder="Search"
-            className="h-7 w-full pl-8 pr-14 focus-visible:ring-0 focus-visible:ring-offset-0"
+            autoFocus
+            className="h-8 w-full rounded-md pl-8 pr-14 text-muted-foreground"
             {...form.register("q")}
           />
           <div className="absolute right-2 flex items-center">
@@ -119,7 +117,7 @@ export function SearchBar() {
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-5 w-5 p-0 hover:bg-transparent">
                   <SlidersHorizontal
-                    className="h-3.5 w-3.5 text-muted-foreground/70"
+                    className="h-3.5 w-3.5 text-muted-foreground"
                     aria-hidden="true"
                   />
                 </Button>
@@ -128,6 +126,7 @@ export function SearchBar() {
                 className="w-[min(calc(100vw-2rem),400px)] p-3 sm:w-[500px] md:w-[600px] md:p-4"
                 side="bottom"
                 sideOffset={10}
+                alignOffset={-8}
                 align="end"
               >
                 <div className="space-y-4">
@@ -154,14 +153,9 @@ export function SearchBar() {
                   {/* Main Filters */}
                   <div className="grid gap-4">
                     <div className="space-y-1.5">
-                      <label
-                        htmlFor="searchIn"
-                        className="text-xs font-medium text-muted-foreground"
-                      >
-                        Search in
-                      </label>
+                      <label className="text-xs font-medium text-muted-foreground">Search in</label>
                       <Select>
-                        <SelectTrigger id="searchIn" className="h-8">
+                        <SelectTrigger className="h-8">
                           <SelectValue placeholder="All Mail" />
                         </SelectTrigger>
                         <SelectContent>
@@ -175,14 +169,8 @@ export function SearchBar() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label
-                        htmlFor="subject"
-                        className="text-xs font-medium text-muted-foreground"
-                      >
-                        Subject
-                      </label>
+                      <label className="text-xs font-medium text-muted-foreground">Subject</label>
                       <Input
-                        id="subject"
                         placeholder="Email subject"
                         {...form.register("subject")}
                         className="h-8"
@@ -191,44 +179,21 @@ export function SearchBar() {
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-1.5">
-                        <label
-                          htmlFor="sender"
-                          className="text-xs font-medium text-muted-foreground"
-                        >
-                          From
-                        </label>
-                        <Input
-                          id="sender"
-                          placeholder="Sender"
-                          {...form.register("from")}
-                          className="h-8"
-                        />
+                        <label className="text-xs font-medium text-muted-foreground">From</label>
+                        <Input placeholder="Sender" {...form.register("from")} className="h-8" />
                       </div>
 
                       <div className="space-y-1.5">
-                        <label
-                          htmlFor="recepient"
-                          className="text-xs font-medium text-muted-foreground"
-                        >
-                          To
-                        </label>
-                        <Input
-                          id="recepient"
-                          placeholder="Recipient"
-                          {...form.register("to")}
-                          className="h-8"
-                        />
+                        <label className="text-xs font-medium text-muted-foreground">To</label>
+                        <Input placeholder="Recipient" {...form.register("to")} className="h-8" />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label
-                        htmlFor="dateFilter"
-                        className="text-xs font-medium text-muted-foreground"
-                      >
+                      <label className="text-xs font-medium text-muted-foreground">
                         Date Range
                       </label>
-                      <DateFilter id="dateFilter" />
+                      <DateFilter />
                     </div>
                   </div>
 
@@ -270,8 +235,8 @@ export function SearchBar() {
               </PopoverContent>
             </Popover>
           </div>
-        </Form>
-      </form>
+        </div>
+      </Form>
     </div>
   );
 }
